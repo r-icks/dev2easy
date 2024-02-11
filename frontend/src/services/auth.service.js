@@ -73,3 +73,25 @@ export const magicDoc = async (values) => {
     throw error;
   }
 };
+
+export const getAllUser = async () => {
+  try {
+    const response = await apiClient.get(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/auth/getAllUsers`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    const response = await apiClient.get(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/auth/logout`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

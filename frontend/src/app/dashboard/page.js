@@ -1,11 +1,13 @@
 "use client";
 import styles from "../page.module.css";
 import { useRouter } from "next/navigation";
-import { Collapse, Spin, List, Button } from "antd";
-import { useQuery } from "react-query";
+import { Collapse, Spin, List, Button, Select, message } from "antd";
+import { useMutation, useQuery } from "react-query";
 import {
+  getAllUser,
   getCurrentUser,
   getMedicineInfo,
+  logout,
   register,
 } from "@/services/auth.service";
 import {
@@ -14,10 +16,13 @@ import {
   GiFoldedPaper,
   GiThreeFriends,
 } from "react-icons/gi";
+import { useState } from "react";
 const { Panel } = Collapse;
 export default function Dashboard() {
   const router = useRouter();
-
+  const [elders, setElders] = useState([]);
+  const [medicineData, setMedicineData] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const listdata = [
     "Racing car sprays burning fuel into crowd.",
     "Japanese princess to wed commoner.",
@@ -27,23 +32,43 @@ export default function Dashboard() {
   ];
 
   const { data, isLoading } = useQuery(["get-current-user"], getCurrentUser, {
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log("data", data);
+      if (data?.user?.accountType === "elder") {
+        setCurrentUser(data?.user);
+        await medicineGetMutation.mutateAsync(data?.user?._id);
+      } else {
+        await getElderMutation.mutateAsync();
+      }
     },
   });
 
-  const {
-    data: medicineData,
-    isLoading: medicineLoading,
-    error,
-  } = useQuery(["get-medicines"], () => getMedicineInfo(data?.user._id), {
+  const getElderMutation = useMutation(getAllUser, {
+    onSuccess: (data) => {
+      console.log("elder data", data);
+      setElders(data.elders);
+    },
+  });
+
+  // const {
+  //   data: medicineData,
+  //   isLoading: medicineLoading,
+  //   error,
+  // } = useQuery(["get-medicines"], () => getMedicineInfo(currentUser?._id), {
+  //   onSuccess: (data) => {
+  //     console.log("medicine data", data);
+  //   },
+  //   enabled: !!currentUser?._id,
+  // });
+
+  const medicineGetMutation = useMutation(getMedicineInfo, {
     onSuccess: (data) => {
       console.log("medicine data", data);
+      setMedicineData(data);
     },
-    enabled: !!data?.user?._id,
   });
 
-  if (isLoading || medicineLoading) {
+  if (isLoading) {
     return <Spin></Spin>;
   }
 
@@ -71,6 +96,28 @@ export default function Dashboard() {
         >
           How are you feeling today?
         </p>
+
+        {currentUser?.accountType === "caretaker" && (
+          <Select
+            placeholder="Select user to manage"
+            allowClear
+            style={{
+              width: "100%",
+              margin: "1rem 0",
+            }}
+            onSelect={async (value) => {
+              console.log("selected", value);
+              await medicineGetMutation.mutateAsync(value);
+            }}
+          >
+            {elders?.map((elder) => (
+              <Select.Option key={elder._id} value={elder._id}>
+                {elder.name}
+              </Select.Option>
+            ))}
+          </Select>
+        )}
+
         <div className={styles.nav}>
           <div
             className={styles.navItem}
@@ -121,7 +168,7 @@ export default function Dashboard() {
           }}
         >
           <Collapse defaultActiveKey={["1"]}>
-            {medicineData.medicineList.map((medicine, index) => (
+            {medicineData?.medicineList?.map((medicine, index) => (
               <Panel
                 key={index.toString()}
                 header={
@@ -160,6 +207,23 @@ export default function Dashboard() {
           </Collapse>
         </div>
       </div>
+      <Button
+        style={{
+          background: "#CA0B00",
+          borderRadius: "4px",
+          color: "#fff",
+          marginTop: "1rem",
+        }}
+        type="warning"
+        onClick={async () => {
+          await logout().then(() => {
+            message.success("Logged out successfully");
+            router.push("/login");
+          });
+        }}
+      >
+        Logout
+      </Button>
     </div>
   );
 }
