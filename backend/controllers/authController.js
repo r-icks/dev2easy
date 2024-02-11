@@ -1,7 +1,12 @@
 import { StatusCodes } from "http-status-codes";
-import { BadRequestError, UnauthenticatedError } from "../Errors/index.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthenticatedError,
+} from "../Errors/index.js";
 import attachCookie from "../utils/attachCookie.js";
 import User from "../models/user.js";
+import { sendMagicEmail } from "../services/nodemailer.js";
 
 const register = async (req, res) => {
   const { name, email, password, accountType, phoneNumber, age, sex } =
@@ -109,4 +114,64 @@ const registerElder = async (req, res) => {
   await careTaker.save();
 };
 
-export { register, login, getCurrentUser, logout, getAllUsers, registerElder };
+const magicLogin = async (req, res) => {
+  const { userId } = req.userId;
+  const { elderId } = req.body;
+  const careTaker = await User.findOne({ _id: userId });
+  if (!careTaker) {
+    throw new UnauthenticatedError("Invalid Authentication");
+  }
+  if (!careTaker.eid.includes(elderId)) {
+    throw new UnauthenticatedError("Invalid Access");
+  }
+  const elder = await User.findOne({ _id: elderId });
+  if (!elder) {
+    throw new NotFoundError("Elder not found");
+  }
+  const token = jwt.sign(
+    { userId: this._id, userRole: this.accountType, magicLogin: true },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
+  await sendMagicEmail({
+    name: elder.name,
+    email: elder.email,
+    magicLink: `${process.env.FRONTEND_URL}/login/${token}`,
+  });
+  res.status(StatusCodes.OK).json({ msg: "Login email sent!" });
+};
+
+const approveLogin = async (req, res) => {
+  const { token } = req.params;
+  if (!token) {
+    throw new UnauthenticatedError("Authentication Invalid");
+  }
+  const { userId, userRole, magicLogin } = jwt.verify(
+    token,
+    process.env.JWT_SECRET
+  );
+  if (!magicLogin) {
+    throw new UnauthenticatedError("Invalid magic login");
+  }
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+  const loginToken = user.createJWT();
+  attachCookie({ token: loginToken, res });
+  user.password = undefined;
+  res.status(StatusCodes.OK).json({ user });
+};
+
+export {
+  register,
+  login,
+  getCurrentUser,
+  logout,
+  getAllUsers,
+  registerElder,
+  magicLogin,
+  approveLogin,
+};

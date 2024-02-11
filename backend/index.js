@@ -17,6 +17,7 @@ import errorHandlerMiddleware from "./middleware/error-handler.js";
 
 //rotues
 import authRoutes from "./Routes/authRoutes.js";
+import medicineRoutes from "./Routes/medicineRoutes.js";
 
 app.use(express.json());
 app.use(cookieParser());
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/medicine", medicineRoutes);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 

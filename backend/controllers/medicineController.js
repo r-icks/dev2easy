@@ -1,11 +1,13 @@
 import { StatusCodes } from "http-status-codes";
-import MedicineSchedule from "../models/MedicineSchedule";
+import MedicineSchedule from "../models/MedGroup.js";
 import {
   BadRequestError,
   NotFoundError,
   UnauthenticatedError,
 } from "../Errors/index.js";
 import User from "../models/user.js";
+import getCurrentWeekday from "../utils/getCurrentWeekday.js";
+import moment from "moment";
 
 const createMedicineGroup = async (req, res) => {
   const { medicines, time, weekdays, intake, uid } = req.body;
@@ -68,4 +70,82 @@ const editMedicineGroup = async (req, res) => {
   });
 };
 
-export { createMedicineGroup, editMedicineGroup };
+const medicineList = async (req, res) => {
+  const { userId, userRole } = req.user;
+  const { id } = req.params;
+  if (userRole === "caretaker") {
+    const careTaker = await User.findOne({ _id: userId });
+    if (!careTaker) {
+      throw new UnauthenticatedError("Invalid Authentication");
+    }
+    if (!careTaker.eid.includes(id)) {
+      throw new UnauthenticatedError("Invalid Access");
+    }
+  } else {
+    const elder = await User.findOne({ _id: userId });
+    if (!elder) {
+      throw new UnauthenticatedError("Invalid Authentication");
+    }
+    if (elder._id !== id) {
+      throw new UnauthenticatedError("Invalid Access");
+    }
+  }
+  const currentWeekday = getCurrentWeekday();
+  const medicineGroups = await MedicineSchedule.find({
+    uid: id,
+    weekdays: currentWeekday,
+  });
+
+  const groupedMedicines = medicineGroups.map((group) => ({
+    medicines: group.medicines.map((medicine) => ({
+      name: medicine.name,
+      dosage: medicine.dosage,
+    })),
+    time: group.time,
+  }));
+
+  res.status(StatusCodes.OK).json({ medicineList: groupedMedicines });
+};
+
+const logMedicine = async (req, res) => {
+  const { userId, userRole } = req.user;
+  const { id: medicineGroupId } = req.params;
+  const todayStart = moment().startOf("day");
+  const todayEnd = moment().endOf("day");
+
+  const medicineGroup = await MedicineSchedule.findById(medicineGroupId);
+  if (!medicineGroup) {
+    throw new NotFoundError("Medicine group not found.");
+  }
+
+  if (userRole === "caretaker") {
+    const careTaker = await User.findById(userId);
+    if (!careTaker) {
+      throw new UnauthenticatedError("Invalid Authentication");
+    }
+    if (!careTaker.eid.includes(medicineGroup.uid)) {
+      throw new UnauthenticatedError("Invalid Access");
+    }
+  } else {
+    if (userId !== medicineGroup.uid.toString()) {
+      throw new UnauthenticatedError("Invalid Access");
+    }
+  }
+
+  const isMedicineLoggedToday = medicineGroup.intake.some((epoch) => {
+    const intakeDate = moment(epoch * 1000);
+    return intakeDate.isBetween(todayStart, todayEnd, null, "[]");
+  });
+
+  if (isMedicineLoggedToday) {
+    throw new BadRequestError("Medicine already marked for intake today.");
+  }
+
+  const currentEpoch = moment().unix();
+  medicineGroup.intake.push(currentEpoch);
+  await medicineGroup.save();
+
+  res.status(StatusCodes.OK).json({ message: "Medicine logged successfully." });
+};
+
+export { createMedicineGroup, editMedicineGroup, medicineList, logMedicine };
