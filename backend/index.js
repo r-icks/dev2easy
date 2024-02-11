@@ -18,6 +18,9 @@ import errorHandlerMiddleware from "./middleware/error-handler.js";
 //rotues
 import authRoutes from "./Routes/authRoutes.js";
 import medicineRoutes from "./Routes/medicineRoutes.js";
+import cors from "cors";
+
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 app.use(express.json());
 app.use(cookieParser());

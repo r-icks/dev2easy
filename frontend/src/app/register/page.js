@@ -1,13 +1,13 @@
 "use client";
 import styles from "../page.module.css";
 import { useRouter } from "next/navigation";
-import { Form, Input, Button, Checkbox, Select } from "antd";
+import { Form, Input, Button, message, Select } from "antd";
 import { useMutation } from "react-query";
 import { register } from "@/services/auth.service";
 
 export default function Home() {
   const router = useRouter();
-
+  const [form] = Form.useForm();
   const onFinish = async (values) => {
     await registerMutation.mutateAsync(values);
   };
@@ -44,10 +44,10 @@ export default function Home() {
           Start your Journey with Suvidha for a better tomorrow
         </div>
         <Form
-          name="basic"
-          initialValues={{
-            remember: true,
-          }}
+          // name="basic"
+          form={form}
+          name="register-form"
+          initialValues={{}}
           onFinish={onFinish}
           autoComplete="off"
         >
@@ -63,6 +63,7 @@ export default function Home() {
           >
             <Input placeholder="John Doe" />
           </Form.Item>
+
           <Form.Item
             label="Email"
             name="email"
@@ -103,6 +104,20 @@ export default function Home() {
             ]}
           >
             <Input placeholder="Enter your Age" />
+          </Form.Item>
+
+          {/* Add phone number field */}
+          <Form.Item
+            label="Phone"
+            name="phoneNumber"
+            rules={[
+              {
+                required: true,
+                message: "Please input your phone number!",
+              },
+            ]}
+          >
+            <Input placeholder="Enter your Phone Number" />
           </Form.Item>
 
           <Form.Item

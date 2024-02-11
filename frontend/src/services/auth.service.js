@@ -1,6 +1,6 @@
 import apiClient from "@/utils/axios.config";
 
-export const login = async (email, password) => {
+export const login = async ({ email, password }) => {
   try {
     const response = await apiClient.post("/api/v1/auth/login", {
       email,
@@ -12,15 +12,9 @@ export const login = async (email, password) => {
   }
 };
 
-export const register = async (email, password, age, sex, accountType) => {
+export const register = async (values) => {
   try {
-    const response = await apiClient.post("/api/v1/auth/register", {
-      email,
-      password,
-      age,
-      sex,
-      accountType,
-    });
+    const response = await apiClient.post("/api/v1/auth/register", values);
     return response.data;
   } catch (error) {
     throw error;
