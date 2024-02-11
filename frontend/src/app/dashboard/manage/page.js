@@ -2,110 +2,78 @@
 import styles from "../../page.module.css";
 import { useRouter } from "next/navigation";
 import {
+  Collapse,
   Spin,
-  Upload,
-  Form,
-  Input,
+  List,
   Button,
   Select,
-  TimePicker,
   message,
+  Form,
+  Input,
 } from "antd";
 import { useMutation, useQuery } from "react-query";
 import {
-  addMedicineGroup,
+  getAllUser,
   getCurrentUser,
-  magicDoc,
+  getMedicineInfo,
+  logout,
+  register,
 } from "@/services/auth.service";
-import { GiBugleCall, GiFoldedPaper, GiThreeFriends } from "react-icons/gi";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-
-const { Option } = Select;
-
-import { FaHome, FaUpload } from "react-icons/fa";
-import { useEffect, useState } from "react";
-import moment from "moment";
-const { Dragger } = Upload;
-
-const defaultMedicationGroup = {
-  medicineGroups: [],
-};
-
+import {
+  GiPill,
+  GiBugleCall,
+  GiFoldedPaper,
+  GiThreeFriends,
+} from "react-icons/gi";
+import { useState } from "react";
+const { Panel } = Collapse;
 export default function Dashboard() {
   const router = useRouter();
   const [form] = Form.useForm();
-  const [magicFile, setMagicFile] = useState(null);
-  const addMedicineGroupMutation = useMutation(addMedicineGroup, {
-    onSuccess: (data) => {
-      console.log("data", data);
-      message.success("Medication Group Added Successfully");
-    },
-  });
-
-  const magicMutation = useMutation(magicDoc, {
-    onSuccess: (data) => {
-      console.log("data", data);
-      message.success("Medication Group Added Successfully");
-      for (let i = 0; i < data.medicineGroups.length; i++) {
-        // time is in string format, convert it to moment
-        data.medicineGroups[i].time = moment(
-          data.medicineGroups[i].time,
-          "HH:mm"
-        );
-
-        console.log("data.medicineGroups[i].time", data.medicineGroups[i].time);
-      }
-      form.setFieldsValue(data);
-    },
-  });
-
   const onFinish = async (values) => {
-    // You can further process the data or directly use it to create a document in your database
-    if (values.medicineGroups.length > 0) {
-      for (let i = 0; i < values.medicineGroups.length; i++) {
-        values.medicineGroups[i].time =
-          values.medicineGroups[i].time.format("HH:mm");
-
-        await addMedicineGroupMutation.mutateAsync(values.medicineGroups[i]);
-      }
-    }
+    await registerMutation.mutateAsync(values);
   };
-
-  useEffect(() => {
-    form.setFieldsValue(defaultMedicationGroup);
-  }, []);
-
-  const props = {
-    name: "file",
-    multiple: false,
-    onChange(info) {
-      const { status } = info.file;
-      if (status !== "uploading") {
-        console.log(info.file, info.fileList);
-        setMagicFile(info.file);
-      }
-
-      if (status === "done") {
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    onDrop(e) {
-      console.log("Dropped files", e.dataTransfer.files);
-    },
-  };
-
-  // const registerMutation = useMutation(getCurrentUser, {
-  //   onSuccess: (data) => {
-  //     console.log("data", data);
-  //     message.success("Register Successful, please login to continue");
-  //     router.push("/login");
-  //   },
-  // });
+  const [elders, setElders] = useState([]);
+  const [medicineData, setMedicineData] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const listdata = [
+    "Racing car sprays burning fuel into crowd.",
+    "Japanese princess to wed commoner.",
+    "Australian walks 100km after outback crash.",
+    "Man charged over missing wedding girl.",
+    "Los Angeles battles huge wildfires.",
+  ];
 
   const { data, isLoading } = useQuery(["get-current-user"], getCurrentUser, {
+    onSuccess: async (data) => {
+      console.log("data", data);
+      if (data?.user?.accountType === "elder") {
+        setCurrentUser(data?.user);
+        await medicineGetMutation.mutateAsync(data?.user?._id);
+      } else {
+        await getElderMutation.mutateAsync();
+      }
+    },
+  });
+
+  const getElderMutation = useMutation(getAllUser, {
+    onSuccess: (data) => {
+      console.log("elder data", data);
+      setElders(data.elders);
+    },
+  });
+
+  const registerMutation = useMutation(register, {
     onSuccess: (data) => {
       console.log("data", data);
+      message.success("Register Successful, please login to continue");
+      router.push("/dashboard");
+    },
+  });
+  const medicineGetMutation = useMutation(getMedicineInfo, {
+    onSuccess: (data) => {
+      console.log("medicine data", data);
+      setMedicineData(data);
     },
   });
 
@@ -137,19 +105,44 @@ export default function Dashboard() {
         >
           How are you feeling today?
         </p>
+
+        {currentUser?.accountType === "caretaker" && (
+          <Select
+            placeholder="Select user to manage"
+            allowClear
+            style={{
+              width: "100%",
+              margin: "1rem 0",
+            }}
+            onSelect={async (value) => {
+              console.log("selected", value);
+              await medicineGetMutation.mutateAsync(value);
+            }}
+          >
+            {elders?.map((elder) => (
+              <Select.Option key={elder._id} value={elder._id}>
+                {elder.name}
+              </Select.Option>
+            ))}
+          </Select>
+        )}
+
         <div className={styles.nav}>
           <div
             className={styles.navItem}
             onClick={() => {
-              router.push("/dashboard");
+              router.push("/dashboard/medicine");
             }}
           >
-            <FaHome className={styles.icon} size={84} />
-            Dashboard
+            <GiPill className={styles.icon} size={84} />
+            Medicines
           </div>
-          <div className={styles.navItem}>
+          <div
+            className={styles.navItem}
+            onClick={() => window.open("tel:+918799771287")}
+          >
             <GiBugleCall className={styles.icon} size={84} />
-            Contact
+            <p>Contact</p>
           </div>
           <div className={styles.navItem}>
             <GiFoldedPaper className={styles.icon} size={84} />
@@ -167,14 +160,14 @@ export default function Dashboard() {
             marginTop: "2rem",
           }}
         >
-          Add Medication
+          Manage Elders
         </h1>
         <p
           style={{
             fontSize: "14px",
           }}
         >
-          Add your medication details here
+          You can manage the elders here
         </p>
 
         <div
@@ -182,254 +175,204 @@ export default function Dashboard() {
             marginTop: "1rem",
           }}
         >
-          <h1
-            className={styles.dashboardHeader}
-            style={{
-              marginTop: "1rem",
-              fontSize: "1.2rem",
-            }}
-          >
-            Prescription Upload
-          </h1>
-          <p
-            style={{
-              fontSize: "14px",
-              marginBottom: "1rem",
-            }}
-          >
-            Uploading a prescription image will magically parse the details and
-            add the medication to your timeline using the power of <b>LLMs</b>{" "}
-            and <b>OCR</b>
-          </p>
-
-          <Dragger
-            {...props}
-            progress
-            customRequest={({ file, onSuccess }) => {
-              setTimeout(() => {
-                onSuccess("ok");
-              }, 0);
-            }}
-          >
-            <p className="ant-upload-drag-icon" style={{ margin: 0 }}>
-              <FaUpload size={28} />
+          {elders?.length === 0 && (
+            <p
+              style={{
+                fontSize: "14px",
+                marginBottom: "1rem",
+              }}
+            >
+              No elders found
             </p>
-            <p className="ant-upload-text">
-              Click or drag file to this area to upload
-            </p>
-            <p className="ant-upload-hint">
-              Supports single image upload JPEG/PNG
-            </p>
-          </Dragger>
-
-          <Button
-            type="primary"
-            onClick={async () => {
-              console.log("magicFile", magicFile);
-              const formData = new FormData();
-              formData.append("file", magicFile.originFileObj);
-              await magicMutation.mutateAsync(formData);
-            }}
-            style={{
-              marginTop: "1rem",
-            }}
-            loading={magicMutation.isLoading}
-          >
-            Upload Prescription
-          </Button>
-          <h2
-            style={{
-              textAlign: "center",
-              fontWeight: 500,
-              margin: "1rem 0",
-            }}
-          >
-            OR
-          </h2>
-        </div>
-
-        <div
-          style={{
-            marginTop: "1rem",
-          }}
-        >
-          <h1
-            className={styles.dashboardHeader}
-            style={{
-              marginTop: "1rem",
-              fontSize: "1.2rem",
-            }}
-          >
-            Manual Entry
-          </h1>
-          <p
-            style={{
-              fontSize: "14px",
-              marginBottom: "1rem",
-            }}
-          >
-            You can enter the details of the medication manually
-          </p>
-          <Form
-            form={form}
-            name="medication_groups_form"
-            onFinish={onFinish}
-            autoComplete="off"
-          >
-            <Form.List name="medicineGroups">
-              {(groupFields, { add: addGroup, remove: removeGroup }) => (
-                <>
-                  {groupFields.map(({ key, name, ...restGroupField }) => (
-                    <div
-                      key={key}
+          )}
+          <Collapse defaultActiveKey={["1"]}>
+            {elders?.map((medicine, index) => (
+              <Panel
+                key={index.toString()}
+                header={
+                  <>
+                    <div className={styles.timelineTime}>{medicine.time}</div>
+                    <div className={styles.timelineDescription}>
+                      Take these medicines after lunch (
+                      {medicine.medicines.length} medicines)
+                    </div>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
                       style={{
-                        border: "1px solid #964b00",
-                        padding: "10px",
-                        borderRadius: "4px",
-                        marginBottom: "20px",
+                        marginTop: "1rem",
+                        fontSize: "0.8rem",
+                        color: "#ffe17d",
                       }}
                     >
-                      <h1
-                        className={styles.dashboardHeader}
-                        style={{
-                          marginTop: "0",
-                        }}
-                      >
-                        Medication Group {name + 1}
-                      </h1>
-                      <Form.Item
-                        {...restGroupField}
-                        name={[name, "time"]}
-                        label="Time of intake of medication"
-                        rules={[
-                          { required: true, message: "Please select time!" },
-                        ]}
-                        valuePropName={[name, "time"]}
-                      >
-                        <TimePicker
-                          format={"HH:mm"}
-                          defaultValue={
-                            form.getFieldValue(["medicineGroups", name, "time"])
-                              ? moment(
-                                  form.getFieldValue([
-                                    "medicineGroups",
-                                    name,
-                                    "time",
-                                  ]),
-                                  "HH:mm"
-                                )
-                              : null
-                          }
-                        />
-                      </Form.Item>
-
-                      <Form.List name={[name, "medicines"]}>
-                        {(fields, { add, remove }) => (
-                          <>
-                            {fields.map((field, index) => (
-                              <div
-                                key={field.key}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  marginBottom: 8,
-                                }}
-                              >
-                                <Form.Item
-                                  {...field}
-                                  name={[field.name, "name"]}
-                                  fieldKey={[field.fieldKey, "name"]}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Missing medicine name",
-                                    },
-                                  ]}
-                                >
-                                  <Input placeholder="Medicine Name" />
-                                </Form.Item>
-                                <Form.Item
-                                  {...field}
-                                  name={[field.name, "dosage"]}
-                                  fieldKey={[field.fieldKey, "dosage"]}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Missing dosage",
-                                    },
-                                  ]}
-                                >
-                                  <Input placeholder="Dosage" />
-                                </Form.Item>
-                                <MinusCircleOutlined
-                                  onClick={() => remove(field.name)}
-                                />
-                              </div>
-                            ))}
-                            <Form.Item>
-                              <Button
-                                type="dashed"
-                                onClick={() => add()}
-                                block
-                                icon={<PlusOutlined />}
-                              >
-                                Add Medicine
-                              </Button>
-                            </Form.Item>
-                          </>
-                        )}
-                      </Form.List>
-
-                      <Form.Item
-                        {...restGroupField}
-                        name={[name, "weekdays"]}
-                        label="What days is this medication for?"
-                        rules={[
-                          {
-                            required: true,
-                            message: "Please select weekdays!",
-                          },
-                        ]}
-                      >
-                        <Select mode="multiple" placeholder="Select weekdays">
-                          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(
-                            (day) => (
-                              <Option key={day} value={day}>
-                                {day}
-                              </Option>
-                            )
-                          )}
-                        </Select>
-                      </Form.Item>
-
-                      <MinusCircleOutlined
-                        onClick={() => removeGroup(name)}
-                        style={{ color: "red", marginLeft: 8 }}
-                      />
-                    </div>
-                  ))}
-                  <Form.Item>
-                    <Button
-                      type="dashed"
-                      onClick={() => addGroup()}
-                      block
-                      icon={<PlusOutlined />}
-                    >
-                      Add Medication Group
+                      Log Medication
                     </Button>
-                  </Form.Item>
-                </>
-              )}
-            </Form.List>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit">
-                Submit
-              </Button>
-            </Form.Item>
-          </Form>
+                  </>
+                }
+              >
+                <List
+                  size="large"
+                  bordered
+                  dataSource={medicine.medicines}
+                  renderItem={(item) => (
+                    <List.Item>
+                      {item.name} - {item.dosage}
+                    </List.Item>
+                  )}
+                />
+              </Panel>
+            ))}
+          </Collapse>
         </div>
       </div>
+      <h1
+        className={styles.dashboardHeader}
+        style={{
+          marginTop: "2rem",
+        }}
+      >
+        Add Elder Profile
+      </h1>
+      <p
+        style={{
+          fontSize: "14px",
+        }}
+      >
+        You can register new elders here
+      </p>
+      <Form
+        // name="basic"
+        form={form}
+        name="register-form"
+        initialValues={{}}
+        onFinish={onFinish}
+        autoComplete="off"
+      >
+        <Form.Item
+          label="Name"
+          name="name"
+          rules={[
+            {
+              required: true,
+              message: "Please input your name!",
+            },
+          ]}
+        >
+          <Input placeholder="John Doe" />
+        </Form.Item>
+
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            {
+              required: true,
+              message: "Please input your email!",
+            },
+          ]}
+        >
+          <Input type="email" placeholder="example@mail.com" />
+        </Form.Item>
+
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[
+            {
+              required: true,
+              message: "Please input your password!",
+            },
+          ]}
+        >
+          <Input.Password placeholder="Password" autoComplete="new-password" />
+        </Form.Item>
+
+        <Form.Item
+          label="Age"
+          name="age"
+          rules={[
+            {
+              required: true,
+              message: "Please input your age!",
+            },
+          ]}
+        >
+          <Input placeholder="Enter your Age" />
+        </Form.Item>
+
+        {/* Add phone number field */}
+        <Form.Item
+          label="Phone"
+          name="phoneNumber"
+          rules={[
+            {
+              required: true,
+              message: "Please input your phone number!",
+            },
+          ]}
+        >
+          <Input placeholder="Enter your Phone Number" />
+        </Form.Item>
+
+        <Form.Item
+          label="Sex"
+          name="sex"
+          rules={[
+            {
+              required: true,
+              message: "Please select your sex!",
+            },
+          ]}
+        >
+          <Select placeholder="Select your sex" allowClear>
+            <Select.Option value="male">Male</Select.Option>
+            <Select.Option value="female">Female</Select.Option>
+            <Select.Option value="other">Other</Select.Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            style={{
+              marginTop: "1rem",
+              width: "100%",
+            }}
+            // size="large"
+          >
+            Signup
+          </Button>
+        </Form.Item>
+
+        <p>
+          Already have an account?{" "}
+          <a
+            onClick={() => {
+              router.push("/login");
+            }}
+          >
+            Login
+          </a>
+        </p>
+      </Form>
+      <Button
+        style={{
+          background: "#CA0B00",
+          borderRadius: "4px",
+          color: "#fff",
+          marginTop: "1rem",
+        }}
+        type="warning"
+        onClick={async () => {
+          await logout().then(() => {
+            message.success("Logged out successfully");
+            router.push("/login");
+          });
+        }}
+      >
+        Logout
+      </Button>
     </div>
   );
 }
