@@ -10,7 +10,7 @@ import getCurrentWeekday from "../utils/getCurrentWeekday.js";
 import moment from "moment";
 
 const createMedicineGroup = async (req, res) => {
-  const { medicines, time, weekdays, intake, uid } = req.body;
+  let { medicines, time, weekdays, uid } = req.body;
   const { userRole, userId } = req.user;
   if (userRole === "elder") {
     uid = userId;
@@ -21,14 +21,13 @@ const createMedicineGroup = async (req, res) => {
       throw new UnauthenticatedError("Invalid Access");
     }
   }
-  if (!medicines || !time || !weekdays || !intake || !uid) {
+  if (!medicines || !time || !weekdays || !uid) {
     throw new BadRequestError("Please provide all required fields.");
   }
   const medicineGroup = await MedicineSchedule.create({
     medicines,
     time,
     weekdays,
-    intake,
     uid,
   });
   res

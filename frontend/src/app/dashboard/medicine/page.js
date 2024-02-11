@@ -11,8 +11,8 @@ import {
   TimePicker,
   message,
 } from "antd";
-import { useQuery } from "react-query";
-import { getCurrentUser } from "@/services/auth.service";
+import { useMutation, useQuery } from "react-query";
+import { addMedicineGroup, getCurrentUser } from "@/services/auth.service";
 import { GiBugleCall, GiFoldedPaper, GiThreeFriends } from "react-icons/gi";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import moment from "moment";
@@ -26,7 +26,6 @@ const { Dragger } = Upload;
 const defaultMedicationGroup = {
   medicationGroups: [
     {
-      time: moment("12:00", "HH:mm"), // Example default time
       medicines: [
         {
           name: "Paracetamol",
@@ -42,9 +41,23 @@ export default function Dashboard() {
   const router = useRouter();
   const [form] = Form.useForm();
 
-  const onFinish = (values) => {
-    console.log("Received values of form:", values);
+  const addMedicineGroupMutation = useMutation(addMedicineGroup, {
+    onSuccess: (data) => {
+      console.log("data", data);
+      message.success("Medication Group Added Successfully");
+    },
+  });
+
+  const onFinish = async (values) => {
     // You can further process the data or directly use it to create a document in your database
+    if (values.medicationGroups.length > 0) {
+      for (let i = 0; i < values.medicationGroups.length; i++) {
+        values.medicationGroups[i].time =
+          values.medicationGroups[i].time.format("HH:mm");
+
+        await addMedicineGroupMutation.mutateAsync(values.medicationGroups[i]);
+      }
+    }
   };
 
   useEffect(() => {
@@ -252,7 +265,7 @@ export default function Dashboard() {
                           { required: true, message: "Please select time!" },
                         ]}
                       >
-                        <TimePicker format="HH:mm" />
+                        <TimePicker format={"HH:mm"} />
                       </Form.Item>
 
                       <Form.List name={[name, "medicines"]}>

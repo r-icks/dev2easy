@@ -29,3 +29,15 @@ export const getCurrentUser = async () => {
     throw error;
   }
 };
+
+export const addMedicineGroup = async (values) => {
+  try {
+    const response = await apiClient.post(
+      "/api/v1/medicine/medicineGroup",
+      values
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
