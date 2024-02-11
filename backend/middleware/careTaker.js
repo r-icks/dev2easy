@@ -1,0 +1,21 @@
+import { UnauthenticatedError } from "../Errors/index.js";
+import jwt from "jsonwebtoken";
+
+const careTaker = async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    throw new UnauthenticatedError("Authentication Invalid");
+  }
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.userRole !== "caretaker") {
+      throw new UnauthenticatedError("Authentication Invalid");
+    }
+    req.user = { userId: payload.userId, userRole: payload.userRole };
+    next();
+  } catch (err) {
+    throw new UnauthenticatedError("Authentication Invalid");
+  }
+};
+
+export default careTaker;
