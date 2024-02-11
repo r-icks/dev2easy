@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1.2rem;
   min-height: 100vh;
 }
 
@@ -27,4 +27,50 @@
   transition: all 0.3s ease;
   min-width: 10rem;
   margin: 0.4rem;
+}
+
+.nav {
+  margin-bottom: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.navItem {
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #ffe17d;
+  background-color: #964b00;
+  width: 85px;
+  height: 85px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashboardHeader {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.timelineTime {
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-align: left;
+  color: #964b00;
+}
+
+.timelineDescription {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: left;
+  color: #964b00;
 }

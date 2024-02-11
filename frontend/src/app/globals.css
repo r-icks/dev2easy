@@ -46,3 +46,17 @@ a {
 .ant-btn-primary {
   box-shadow: none !important;
 }
+
+.ant-collapse-content-box {
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.ant-collapse {
+  border: 2px solid #964b00 !important;
+}
+
+.ant-collapse-item,
+.ant-list-bordered {
+  border: none !important;
+}

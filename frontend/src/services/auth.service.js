@@ -20,3 +20,12 @@ export const register = async (values) => {
     throw error;
   }
 };
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await apiClient.get("/api/v1/auth/getCurrentUser");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
