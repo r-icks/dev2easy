@@ -42,9 +42,19 @@ export const addMedicineGroup = async (values) => {
   }
 };
 
+export const getMedicineInfo = async (id) => {
+  try {
+    const response = await apiClient.get();
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const magicDoc = async (values) => {
   try {
     const response = await apiClient.post("/api/v1/docs", values);
+
     return response.data;
   } catch (error) {
     throw error;

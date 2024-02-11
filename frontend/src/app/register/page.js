@@ -16,7 +16,7 @@ export default function Home() {
     onSuccess: (data) => {
       console.log("data", data);
       message.success("Register Successful, please login to continue");
-      router.push("/login");
+      router.push("/dashboard");
     },
   });
 

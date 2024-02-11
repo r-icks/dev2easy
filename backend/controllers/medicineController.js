@@ -85,7 +85,7 @@ const medicineList = async (req, res) => {
     if (!elder) {
       throw new UnauthenticatedError("Invalid Authentication");
     }
-    if (elder._id !== id) {
+    if (elder._id.toString() !== id) {
       throw new UnauthenticatedError("Invalid Access");
     }
   }

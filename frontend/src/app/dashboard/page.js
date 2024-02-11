@@ -2,28 +2,23 @@
 import styles from "../page.module.css";
 import { useRouter } from "next/navigation";
 import { Collapse, Spin, List, Button } from "antd";
-import { useMutation, useQuery } from "react-query";
-import { getCurrentUser, register } from "@/services/auth.service";
+import { useQuery } from "react-query";
+import {
+  getCurrentUser,
+  getMedicineInfo,
+  register,
+} from "@/services/auth.service";
 import {
   GiPill,
   GiBugleCall,
   GiFoldedPaper,
   GiThreeFriends,
 } from "react-icons/gi";
+import { sources } from "next/dist/compiled/webpack/webpack";
 const { Panel } = Collapse;
 export default function Dashboard() {
   const router = useRouter();
-  const onFinish = async (values) => {
-    await registerMutation.mutateAsync(values);
-  };
 
-  // const registerMutation = useMutation(getCurrentUser, {
-  //   onSuccess: (data) => {
-  //     console.log("data", data);
-  //     message.success("Register Successful, please login to continue");
-  //     router.push("/login");
-  //   },
-  // });
   const listdata = [
     "Racing car sprays burning fuel into crowd.",
     "Japanese princess to wed commoner.",
@@ -34,9 +29,20 @@ export default function Dashboard() {
 
   const { data, isLoading } = useQuery(["get-current-user"], getCurrentUser, {
     onSuccess: (data) => {
-      console.log("data", data);
+      console.log("gandua", data);
     },
   });
+
+  // const {
+  //   data: medicineData,
+  //   isLoading: medicineLoading,
+  //   error,
+  // } = useQuery(["get-medicines"], getMedicineInfo(data._id), {
+  //   onSuccess: (data) => {
+  //     console.log("medicine data", data);
+  //   },
+  //   enabled: !!data._id,
+  // });
 
   if (isLoading) {
     return <Spin></Spin>;
