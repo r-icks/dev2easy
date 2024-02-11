@@ -81,9 +81,12 @@ export default function Dashboard() {
             <GiPill className={styles.icon} size={84} />
             Medicines
           </div>
-          <div className={styles.navItem}>
+          <div
+            className={styles.navItem}
+            onClick={() => window.open("tel:+918799771287")}
+          >
             <GiBugleCall className={styles.icon} size={84} />
-            Contact
+            <p>Contact</p>
           </div>
           <div className={styles.navItem}>
             <GiFoldedPaper className={styles.icon} size={84} />
