@@ -12,7 +12,11 @@ import {
   message,
 } from "antd";
 import { useMutation, useQuery } from "react-query";
-import { addMedicineGroup, getCurrentUser } from "@/services/auth.service";
+import {
+  addMedicineGroup,
+  getCurrentUser,
+  magicDoc,
+} from "@/services/auth.service";
 import { GiBugleCall, GiFoldedPaper, GiThreeFriends } from "react-icons/gi";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import moment from "moment";
@@ -20,11 +24,11 @@ import moment from "moment";
 const { Option } = Select;
 
 import { FaHome, FaUpload } from "react-icons/fa";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 const { Dragger } = Upload;
 
 const defaultMedicationGroup = {
-  medicationGroups: [
+  medicineGroups: [
     {
       medicines: [
         {
@@ -40,7 +44,7 @@ const defaultMedicationGroup = {
 export default function Dashboard() {
   const router = useRouter();
   const [form] = Form.useForm();
-
+  const [magicFile, setMagicFile] = useState(null);
   const addMedicineGroupMutation = useMutation(addMedicineGroup, {
     onSuccess: (data) => {
       console.log("data", data);
@@ -48,14 +52,22 @@ export default function Dashboard() {
     },
   });
 
+  const magicMutation = useMutation(magicDoc, {
+    onSuccess: (data) => {
+      console.log("data", data);
+      message.success("Medication Group Added Successfully");
+      form.setFieldsValue(data);
+    },
+  });
+
   const onFinish = async (values) => {
     // You can further process the data or directly use it to create a document in your database
-    if (values.medicationGroups.length > 0) {
-      for (let i = 0; i < values.medicationGroups.length; i++) {
-        values.medicationGroups[i].time =
-          values.medicationGroups[i].time.format("HH:mm");
+    if (values.medicineGroups.length > 0) {
+      for (let i = 0; i < values.medicineGroups.length; i++) {
+        values.medicineGroups[i].time =
+          values.medicineGroups[i].time.format("HH:mm");
 
-        await addMedicineGroupMutation.mutateAsync(values.medicationGroups[i]);
+        await addMedicineGroupMutation.mutateAsync(values.medicineGroups[i]);
       }
     }
   };
@@ -66,15 +78,15 @@ export default function Dashboard() {
 
   const props = {
     name: "file",
-    multiple: true,
-    action: "https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188",
+    multiple: false,
     onChange(info) {
       const { status } = info.file;
       if (status !== "uploading") {
         console.log(info.file, info.fileList);
+        setMagicFile(info.file);
       }
+
       if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
       } else if (status === "error") {
         message.error(`${info.file.name} file upload failed.`);
       }
@@ -186,7 +198,15 @@ export default function Dashboard() {
             and <b>OCR</b>
           </p>
 
-          <Dragger {...props}>
+          <Dragger
+            {...props}
+            progress
+            customRequest={({ file, onSuccess }) => {
+              setTimeout(() => {
+                onSuccess("ok");
+              }, 0);
+            }}
+          >
             <p className="ant-upload-drag-icon" style={{ margin: 0 }}>
               <FaUpload size={28} />
             </p>
@@ -197,6 +217,22 @@ export default function Dashboard() {
               Supports single image upload JPEG/PNG
             </p>
           </Dragger>
+
+          <Button
+            type="primary"
+            onClick={async () => {
+              console.log("magicFile", magicFile);
+              const formData = new FormData();
+              formData.append("file", magicFile.originFileObj);
+              await magicMutation.mutateAsync(formData);
+            }}
+            style={{
+              marginTop: "1rem",
+            }}
+            loading={magicMutation.isLoading}
+          >
+            Upload Prescription
+          </Button>
           <h2
             style={{
               textAlign: "center",
@@ -236,7 +272,7 @@ export default function Dashboard() {
             onFinish={onFinish}
             autoComplete="off"
           >
-            <Form.List name="medicationGroups">
+            <Form.List name="medicineGroups">
               {(groupFields, { add: addGroup, remove: removeGroup }) => (
                 <>
                   {groupFields.map(({ key, name, ...restGroupField }) => (
@@ -264,6 +300,7 @@ export default function Dashboard() {
                         rules={[
                           { required: true, message: "Please select time!" },
                         ]}
+                        valuePropName={[name, "time"]}
                       >
                         <TimePicker format={"HH:mm"} />
                       </Form.Item>

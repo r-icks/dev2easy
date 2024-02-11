@@ -41,3 +41,12 @@ export const addMedicineGroup = async (values) => {
     throw error;
   }
 };
+
+export const magicDoc = async (values) => {
+  try {
+    const response = await apiClient.post("/api/v1/docs", values);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
