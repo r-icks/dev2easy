@@ -5,7 +5,7 @@ import {
   NotFoundError,
   UnauthenticatedError,
 } from "../Errors/index.js";
-import User from "../models/user.js";
+import User from "../models/User.js";
 import getCurrentWeekday from "../utils/getCurrentWeekday.js";
 import moment from "moment";
 
