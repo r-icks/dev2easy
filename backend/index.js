@@ -18,6 +18,7 @@ import errorHandlerMiddleware from "./middleware/error-handler.js";
 //rotues
 import authRoutes from "./Routes/authRoutes.js";
 import medicineRoutes from "./Routes/medicineRoutes.js";
+import docRoutes from "./Routes/docsRoutes.js";
 import cors from "cors";
 
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
@@ -31,6 +32,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/medicine", medicineRoutes);
+app.use("/api/v1/docs", docRoutes);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
