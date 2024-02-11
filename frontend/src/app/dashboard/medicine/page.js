@@ -19,23 +19,18 @@ import {
 } from "@/services/auth.service";
 import { GiBugleCall, GiFoldedPaper, GiThreeFriends } from "react-icons/gi";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import moment from "moment";
 
 const { Option } = Select;
 
 import { FaHome, FaUpload } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import moment from "moment";
 const { Dragger } = Upload;
 
 const defaultMedicationGroup = {
   medicineGroups: [
     {
-      medicines: [
-        {
-          name: "Paracetamol",
-          dosage: "500mg",
-        },
-      ],
+      medicines: [{}],
       weekdays: ["Mo", "Tu"],
     },
   ],
@@ -56,6 +51,13 @@ export default function Dashboard() {
     onSuccess: (data) => {
       console.log("data", data);
       message.success("Medication Group Added Successfully");
+      for (let i = 0; i < data.medicineGroups.length; i++) {
+        // time is in string format, convert it to moment
+        data.medicineGroups[i].time = moment(
+          data.medicineGroups[i].time,
+          "HH:mm"
+        );
+      }
       form.setFieldsValue(data);
     },
   });
@@ -139,7 +141,12 @@ export default function Dashboard() {
           How are you feeling today?
         </p>
         <div className={styles.nav}>
-          <div className={styles.navItem}>
+          <div
+            className={styles.navItem}
+            onClick={() => {
+              router.push("/dashboard");
+            }}
+          >
             <FaHome className={styles.icon} size={84} />
             Dashboard
           </div>

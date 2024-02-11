@@ -72,7 +72,12 @@ export default function Dashboard() {
           How are you feeling today?
         </p>
         <div className={styles.nav}>
-          <div className={styles.navItem}>
+          <div
+            className={styles.navItem}
+            onClick={() => {
+              router.push("/dashboard/medicines");
+            }}
+          >
             <GiPill className={styles.icon} size={84} />
             Medicines
           </div>
