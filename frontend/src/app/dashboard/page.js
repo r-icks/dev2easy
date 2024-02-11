@@ -75,7 +75,7 @@ export default function Dashboard() {
           <div
             className={styles.navItem}
             onClick={() => {
-              router.push("/dashboard/medicines");
+              router.push("/dashboard/medicine");
             }}
           >
             <GiPill className={styles.icon} size={84} />

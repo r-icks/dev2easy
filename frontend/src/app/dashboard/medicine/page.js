@@ -28,12 +28,7 @@ import moment from "moment";
 const { Dragger } = Upload;
 
 const defaultMedicationGroup = {
-  medicineGroups: [
-    {
-      medicines: [{}],
-      weekdays: ["Mo", "Tu"],
-    },
-  ],
+  medicineGroups: [],
 };
 
 export default function Dashboard() {
@@ -57,6 +52,8 @@ export default function Dashboard() {
           data.medicineGroups[i].time,
           "HH:mm"
         );
+
+        console.log("data.medicineGroups[i].time", data.medicineGroups[i].time);
       }
       form.setFieldsValue(data);
     },
@@ -309,7 +306,21 @@ export default function Dashboard() {
                         ]}
                         valuePropName={[name, "time"]}
                       >
-                        <TimePicker format={"HH:mm"} />
+                        <TimePicker
+                          format={"HH:mm"}
+                          defaultValue={
+                            form.getFieldValue(["medicineGroups", name, "time"])
+                              ? moment(
+                                  form.getFieldValue([
+                                    "medicineGroups",
+                                    name,
+                                    "time",
+                                  ]),
+                                  "HH:mm"
+                                )
+                              : null
+                          }
+                        />
                       </Form.Item>
 
                       <Form.List name={[name, "medicines"]}>
