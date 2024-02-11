@@ -44,7 +44,9 @@ export const addMedicineGroup = async (values) => {
 
 export const getMedicineInfo = async (id) => {
   try {
-    const response = await apiClient.get();
+    const response = await apiClient.get(
+      `/api/v1/medicine/medicineGroup/${id}`
+    );
     return response.data;
   } catch (error) {
     throw error;

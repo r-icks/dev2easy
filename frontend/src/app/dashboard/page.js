@@ -14,7 +14,6 @@ import {
   GiFoldedPaper,
   GiThreeFriends,
 } from "react-icons/gi";
-import { sources } from "next/dist/compiled/webpack/webpack";
 const { Panel } = Collapse;
 export default function Dashboard() {
   const router = useRouter();
@@ -29,22 +28,22 @@ export default function Dashboard() {
 
   const { data, isLoading } = useQuery(["get-current-user"], getCurrentUser, {
     onSuccess: (data) => {
-      console.log("gandua", data);
+      console.log("data", data);
     },
   });
 
-  // const {
-  //   data: medicineData,
-  //   isLoading: medicineLoading,
-  //   error,
-  // } = useQuery(["get-medicines"], getMedicineInfo(data._id), {
-  //   onSuccess: (data) => {
-  //     console.log("medicine data", data);
-  //   },
-  //   enabled: !!data._id,
-  // });
+  const {
+    data: medicineData,
+    isLoading: medicineLoading,
+    error,
+  } = useQuery(["get-medicines"], () => getMedicineInfo(data?.user._id), {
+    onSuccess: (data) => {
+      console.log("medicine data", data);
+    },
+    enabled: !!data?.user?._id,
+  });
 
-  if (isLoading) {
+  if (isLoading || medicineLoading) {
     return <Spin></Spin>;
   }
 
@@ -114,37 +113,42 @@ export default function Dashboard() {
           }}
         >
           <Collapse defaultActiveKey={["1"]}>
-            <Panel
-              header={
-                <>
-                  <div className={styles.timelineTime}>4:40 PM</div>
-                  <div className={styles.timelineDescription}>
-                    Take these medicines after lunch (12 medicines)
-                  </div>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    style={{
-                      marginTop: "1rem",
-                      fontSize: "0.8rem",
-                      color: "#ffe17d",
-                    }}
-                  >
-                    Log Medication
-                  </Button>
-                </>
-              }
-              key="1"
-            >
-              <List
-                size="large"
-                // header={<div>Header</div>}
-                // footer={<div>Footer</div>}
-                bordered
-                dataSource={listdata}
-                renderItem={(item) => <List.Item>{item}</List.Item>}
-              />
-            </Panel>
+            {medicineData.medicineList.map((medicine, index) => (
+              <Panel
+                key={index.toString()}
+                header={
+                  <>
+                    <div className={styles.timelineTime}>{medicine.time}</div>
+                    <div className={styles.timelineDescription}>
+                      Take these medicines after lunch (
+                      {medicine.medicines.length} medicines)
+                    </div>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      style={{
+                        marginTop: "1rem",
+                        fontSize: "0.8rem",
+                        color: "#ffe17d",
+                      }}
+                    >
+                      Log Medication
+                    </Button>
+                  </>
+                }
+              >
+                <List
+                  size="large"
+                  bordered
+                  dataSource={medicine.medicines}
+                  renderItem={(item) => (
+                    <List.Item>
+                      {item.name} - {item.dosage}
+                    </List.Item>
+                  )}
+                />
+              </Panel>
+            ))}
           </Collapse>
         </div>
       </div>
