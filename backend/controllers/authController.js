@@ -5,7 +5,7 @@ import {
   UnauthenticatedError,
 } from "../Errors/index.js";
 import attachCookie from "../utils/attachCookie.js";
-import User from "../models/user.js";
+import User from "../models/User.js";
 import { sendMagicEmail } from "../services/nodemailer.js";
 
 const register = async (req, res) => {
